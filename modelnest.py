@@ -60,37 +60,25 @@ def display_models(models):
     for row in sorted(results, key=lambda x: x[0]):
         table.add_row(row)
     
+    print(f"\nOllama Models ({len(models)}):")
+    print(table)
+
+def display_models(models):
+    table = PrettyTable()
+    table.field_names = ["S.No.", "Model", "Size", "Parameters", "Format", "Quantization", "Modified", "Family"]
+    table.align = "l"  # Left-align all columns
+    
+    # Use multiprocessing to process models in parallel
+    with Pool(processes=cpu_count()) as pool:
+        results = pool.map(process_model, enumerate(models))
+    
+    # Sort results by S.No. and add to table
+    for row in sorted(results, key=lambda x: x[0]):
+        table.add_row(row)
+    
     print(f"\nModels ({len(models)}):")
     print(table)
-    print("\nUse the modelnest MODEL_NAME -v to see all the info of one model.")
-
-def display_model_details(model_name, models):
-    model = next((m for m in models if m['name'] == model_name), None)
-    if not model:
-        print(f"Model '{model_name}' not found.")
-        return
-
-    table = PrettyTable()
-    table.field_names = ["Attribute", "Value"]
-    table.align = "l"
-
-    # Add basic information
-    table.add_row(["Name", model.get('name', 'N/A')])
-    table.add_row(["Size", format_size(model.get('size', 0))])
-    table.add_row(["Modified", format_date(model.get('modified_at', 'N/A'))])
-
-    # Add all details
-    details = model.get('details', {})
-    for key, value in details.items():
-        table.add_row([key.replace('_', ' ').title(), str(value)])
-
-    # Add any additional fields from the model object
-    for key, value in model.items():
-        if key not in ['name', 'size', 'modified_at', 'details']:
-            table.add_row([key.replace('_', ' ').title(), str(value)])
-
-    print(f"\nDetailed information for model '{model_name}':")
-    print(table)
+    print("\nUse modelnest MODEL_NAME -v to see all the info of one model.")
 
 def run_ollama_command(command, model_name):
     try:
@@ -110,47 +98,19 @@ def run_ollama_command(command, model_name):
 
 def update_software():
     script_path = os.path.abspath(sys.argv[0])
-    print(f"Current script path: {script_path}")
-    
     try:
         print("Checking for updates...")
-        # Replace this URL with your actual GitHub raw file URL
-        url = "https://raw.githubusercontent.com/GunjaGupta1233/ModelNest/main/modelnest.py"
-        response = requests.get(url)
-        
+        response = requests.get("https://raw.githubusercontent.com/GunjaGupta1233/ModelNest/main/modelnest.py")
         if response.status_code == 200:
-            current_content = ''
-            with open(script_path, 'r') as file:
-                current_content = file.read()
-            
-            if current_content == response.text:
-                print("You already have the latest version.")
-                return
-            
-            # Create a backup of the current script
-            backup_path = f"{script_path}.backup"
-            with open(backup_path, 'w') as file:
-                file.write(current_content)
-            print(f"Backup created at: {backup_path}")
-            
-            # Write the new content
             with open(script_path, 'w') as file:
                 file.write(response.text)
-            
-            print("Software updated successfully.")
-            print("Please restart the application for changes to take effect.")
-            print(f"If you experience issues, you can restore the backup from: {backup_path}")
-            sys.exit(0)  # Exit immediately after update
+            print("Software updated successfully. Please restart the application.")
         else:
-            print(f"Failed to fetch updates. Status code: {response.status_code}")
+            print(f"No updates available or unable to fetch updates. Status code: {response.status_code}")
     except Exception as e:
         print(f"Error updating software: {e}")
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == '-u':
-        update_software()
-        return
-    
     multiprocessing.freeze_support()
     parser = argparse.ArgumentParser(description="Manage Ollama models.")
     parser.add_argument('model_name', nargs='*', help="Model name(s) to operate on")
