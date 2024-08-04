@@ -62,7 +62,7 @@ def display_models(models):
     
     print(f"\nModels ({len(models)}):")
     print(table)
-    print("\nUse modelnest MODEL_NAME -v to see all the info of one model.")
+    print("\nUse the modelnest MODEL_NAME -v to see all the info of one model.")
 
 def display_model_details(model_name, models):
     model = next((m for m in models if m['name'] == model_name), None)
