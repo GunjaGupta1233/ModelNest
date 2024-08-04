@@ -78,7 +78,7 @@ def display_models(models):
     
     print(f"\nModels ({len(models)}):")
     print(table)
-    print("\nUse modelnest MODEL_NAME -v to see all the info of one model.")
+    print("\nUse the modelnest MODEL_NAME -v to see all the info of one model.")
 
 def run_ollama_command(command, model_name):
     try:
